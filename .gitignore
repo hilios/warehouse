@@ -1,0 +1,6 @@
+target/
+.bsp
+
+# IntelliJ
+.idea/
+*.iml
