@@ -1,6 +1,7 @@
 package com.ingka.warehouse.api.adapters.http
 
 import cats.effect.{ContextShift, IO}
+import cats.implicits._
 import com.ingka.warehouse.api.domain.{Envelope, Inventory, Products}
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
@@ -40,7 +41,8 @@ case class ImportRoutes(logger: Logger[IO], products: Products[IO], inventory: I
   // Import actions
   private def handleProducts(part: Part[IO]): IO[Unit] = {
     for {
-      _ <- part.as[Envelope[Products.Product]]
+      e <- part.as[Envelope[Products.Product]]
+      _ <- e.results.traverse(products.create)
       _ <- logger.info(s"Products loaded from [${part.filename.getOrElse("-")}]")
     } yield ()
   }.handleErrorWith {
@@ -49,7 +51,8 @@ case class ImportRoutes(logger: Logger[IO], products: Products[IO], inventory: I
 
   private def handleArticles(part: Part[IO]): IO[Unit] = {
     for {
-      _ <- part.as[Envelope[Inventory.Article]]
+      e <- part.as[Envelope[Inventory.Article]]
+      _ <- e.results.traverse(inventory.create)
       _ <- logger.info(s"Inventory loaded from [${part.filename.getOrElse("-")}]")
     } yield ()
   }.handleErrorWith {

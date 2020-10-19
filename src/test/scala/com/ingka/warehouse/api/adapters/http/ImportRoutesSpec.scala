@@ -11,6 +11,8 @@ import org.http4s.implicits._
 import org.http4s.multipart.{Multipart, Part}
 import org.scalatest.concurrent.Eventually
 
+import scala.util.Random
+
 class ImportRoutesSpec extends UnitSpec with WithContextShift with Eventually {
 
   val testLogger = TestingLogger.impl[IO]()
@@ -20,6 +22,8 @@ class ImportRoutesSpec extends UnitSpec with WithContextShift with Eventually {
   val routes = ImportRoutes(testLogger, products, inventory).routes.orNotFound
 
   "POST /products/import" should "import a JSON file" in runIO {
+    (products.create _).expects(*).returns(IO.pure(Random.nextLong())).anyNumberOfTimes()
+
     val json = getClass.getResource("/products.json")
     val part = Part.fileData[IO](json.getFile, json, blocker, `Content-Type`(MediaType.application.json))
     val body = Multipart[IO](Vector(part))
@@ -37,6 +41,8 @@ class ImportRoutesSpec extends UnitSpec with WithContextShift with Eventually {
   }
 
   "POST /inventory/import" should "import a JSON file" in runIO {
+    (inventory.create _).expects(*).returns(IO.pure(Random.nextLong())).anyNumberOfTimes()
+
     val json = getClass.getResource("/inventory.json")
     val part = Part.fileData[IO](json.getFile, json, blocker, `Content-Type`(MediaType.application.json))
     val body = Multipart[IO](Vector(part))
