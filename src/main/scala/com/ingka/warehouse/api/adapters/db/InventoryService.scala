@@ -2,6 +2,7 @@ package com.ingka.warehouse.api.adapters.db
 
 import cats.effect.IO
 import com.ingka.warehouse.api.domain.{Envelope, Inventory}
+import com.ingka.warehouse.api.resources.{Database, Log}
 import doobie._
 import doobie.implicits._
 import io.chrisdavenport.log4cats.Logger
@@ -44,6 +45,11 @@ case class InventoryService(xa: Transactor[IO], logger: Logger[IO]) extends Inve
 }
 
 object InventoryService {
+
+  def apply(runtime: Database with Log): IO[InventoryService] =
+    for {
+      logger <- runtime.getLogger
+    } yield InventoryService(runtime.xa, logger)
 
   // TODO: Add pagination
   private val selectAll: doobie.ConnectionIO[List[Inventory.Article]] =

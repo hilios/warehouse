@@ -3,11 +3,14 @@ package com.ingka.warehouse.api
 import java.util.concurrent.Executors
 
 import cats.effect.{Blocker, ContextShift, ExitCode, IO, IOApp, Resource, Timer}
+import com.ingka.warehouse.api.adapters.db.{InventoryService, ProductsService}
+import com.ingka.warehouse.api.adapters.http.{ImportRoutes, ProductsRoutes, Routes}
 import com.ingka.warehouse.api.resources.{Configuration, Database, ExecutionManager, Log}
 import doobie.util.transactor.Transactor
 import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.implicits._
 
 import scala.concurrent.ExecutionContext
 
@@ -39,9 +42,18 @@ object Main extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = runtime.use { r =>
     for {
+
+      products  <- ProductsService(r)
+      inventory <- InventoryService(r)
+
+      endpoints <- Routes.combine(
+        IO.pure(ProductsRoutes(products)),
+        ImportRoutes(r, products, inventory)
+      )
+
       exitCode <- BlazeServerBuilder[IO](r.globalEC)
         .bindHttp(r.config.http.port, r.config.http.host)
-//        .withHttpApp(endpoints)
+        .withHttpApp(endpoints.orNotFound)
         .serve
         .compile
         .drain

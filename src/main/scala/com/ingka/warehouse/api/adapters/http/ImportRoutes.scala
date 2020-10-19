@@ -3,6 +3,7 @@ package com.ingka.warehouse.api.adapters.http
 import cats.effect.{ContextShift, IO}
 import cats.implicits._
 import com.ingka.warehouse.api.domain.{Envelope, Inventory, Products}
+import com.ingka.warehouse.api.resources.Log
 import io.chrisdavenport.log4cats.Logger
 import io.circe.Decoder
 import org.http4s.multipart.{Multipart, Part}
@@ -72,4 +73,14 @@ case class ImportRoutes(logger: Logger[IO], products: Products[IO], inventory: I
     case request @ POST -> Root / "inventory" / "import" => handleImport(request)(handleArticles)
     case request @ POST -> Root / "products" / "import"  => handleImport(request)(handleProducts)
   }
+}
+
+object ImportRoutes {
+
+  def apply(log: Log, products: Products[IO], inventory: Inventory[IO])(
+    implicit CS: ContextShift[IO]
+  ): IO[ImportRoutes] =
+    for {
+      logger <- log.getLogger
+    } yield ImportRoutes(logger, products, inventory)
 }
