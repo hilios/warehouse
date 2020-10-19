@@ -7,7 +7,6 @@ import com.ingka.warehouse.api.domain.{Envelope, Products}
 import com.ingka.warehouse.api.resources.{Database, Log}
 import doobie._
 import doobie.implicits._
-import doobie.h2._
 import org.h2.api.ErrorCode
 import io.chrisdavenport.log4cats.Logger
 
@@ -46,7 +45,7 @@ case class ProductsService(xa: Transactor[IO], logger: Logger[IO]) extends Produ
   def sell(id: Long): IO[Boolean] =
     for {
       _ <- logger.info(s"Updating product [$id] inventory")
-      n <- sellQuery(id).transact(xa).exceptSqlState {
+      n <- sellQuery(id).transact(xa).exceptSomeSqlState {
         case CHECK_CONSTRAINT_VIOLATED => IO.pure(0)
       }
     } yield n > 0

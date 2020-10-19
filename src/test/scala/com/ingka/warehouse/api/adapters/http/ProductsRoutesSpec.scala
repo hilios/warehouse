@@ -30,7 +30,7 @@ class ProductsRoutesSpec extends UnitSpec {
   )
 
   "GET /products" should "return a list of all products" in runIO {
-    (products.findAll _).expects().returns(IO.pure(Envelope(List(product))))
+    (() => products.findAll).expects().returns(IO.pure(Envelope(List(product))))
 
     val request = Request[IO](Method.GET, uri"/products")
     for {
