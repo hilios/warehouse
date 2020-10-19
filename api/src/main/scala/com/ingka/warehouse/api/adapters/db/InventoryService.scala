@@ -1,14 +1,22 @@
 package com.ingka.warehouse.api.adapters.db
 
 import cats.effect.IO
-import com.ingka.warehouse.api.domain.Inventory
+import com.ingka.warehouse.api.domain.{Envelope, Inventory}
 import doobie._
 import doobie.implicits._
-import doobie.h2.implicits._
 import io.chrisdavenport.log4cats.Logger
 
 case class InventoryService(xa: Transactor[IO], logger: Logger[IO]) extends Inventory[IO] {
   import InventoryService._
+
+  def findAll: IO[Envelope[Inventory.Article]] =
+    selectAll.transact(xa).map(Envelope(_))
+
+  def findByProductId(productId: Long): IO[Envelope[Inventory.Article]] =
+    for {
+      _ <- logger.info(s"Requesting inventory for product [$productId]")
+      r <- selectByProductId(productId).transact(xa)
+    } yield Envelope(r)
 
   def create(article: Inventory.Article): IO[Long] =
     for {
@@ -36,6 +44,18 @@ case class InventoryService(xa: Transactor[IO], logger: Logger[IO]) extends Inve
 }
 
 object InventoryService {
+
+  // TODO: Add pagination
+  private val selectAll: doobie.ConnectionIO[List[Inventory.Article]] =
+    sql"SELECT id, name, in_stock FROM articles".query[Inventory.Article].to[List]
+
+  private def selectByProductId(productId: Long): doobie.ConnectionIO[List[Inventory.Article]] =
+    sql"""
+    SELECT id, name, in_stock 
+    FROM articles 
+    INNER JOIN products_articles ON articles.id = products_articles.article_id  
+    WHERE products_articles.product_id = $productId
+    """.query[Inventory.Article].to[List]
 
   private def insertQuery(article: Inventory.Article): doobie.ConnectionIO[Long] =
     sql"INSERT INTO articles (name, in_stock) VALUES (${article.name}, ${article.inStock})".update

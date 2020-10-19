@@ -1,16 +1,21 @@
 package com.ingka.warehouse.api.adapters.db
 
+import cats.data.NonEmptyList
 import cats.effect.IO
 import cats.implicits._
-import com.ingka.warehouse.api.domain.Products
+import com.ingka.warehouse.api.domain.{Envelope, Products}
 import com.ingka.warehouse.api.resources.{Database, Log}
 import doobie._
 import doobie.implicits._
-import doobie.h2.implicits._
 import io.chrisdavenport.log4cats.Logger
 
 case class ProductsService(xa: Transactor[IO], logger: Logger[IO]) extends Products[IO] {
   import ProductsService._
+
+  def findAll: IO[Envelope[Products.Product]] =
+    for {
+      results <- selectAll.transact(xa)
+    } yield Envelope(results)
 
   def create(product: Products.Product): IO[Long] =
     for {
@@ -48,9 +53,9 @@ object ProductsService {
     sql"DELETE FROM products_articles WHERE product_id = $productId".update
 
   private def insertManyArticlesQuery(productId: Long, articles: List[Products.Article]) =
-    Update[(Long, Products.Article)](
+    Update[(Long, Long, Int)](
       "INSERT INTO products_articles (product_id, article_id, amount_of) VALUES (?, ?, ?)"
-    ).updateMany(articles.map(productId -> _))
+    ).updateMany(articles.map(a => (productId, a.id, a.amountOf)))
 
   private def insertQuery(product: Products.Product) =
     for {
@@ -59,18 +64,35 @@ object ProductsService {
       _ <- insertManyArticlesQuery(id, product.articles)
     } yield id
 
-  private def selectByIdQuery(id: Long): doobie.ConnectionIO[Option[Products.Product]] = {
+  // TODO: Add pagination
+  private val selectAll: doobie.ConnectionIO[List[Products.Product]] =
     for {
-      a <- sql"SELECT article_id, amount_of FROM products_articles WHERE product_id = $id"
+      p <- sql"SELECT id, name FROM products".query[(Long, String)].to[List]
+      ids = p.map(_._1).toNel.getOrElse(NonEmptyList.one(-1L))
+      a <- sql"""
+           SELECT product_id, article_id, amount_of, in_stock 
+           FROM products_articles 
+           INNER JOIN articles ON articles.id = products_articles.article_id
+           WHERE ${Fragments.in(fr"product_id", ids)}"""
+        .query[(Long, Products.Article)]
+        .to[List]
+      articles = a.groupBy(_._1).view.mapValues(_.map(_._2)).toMap
+    } yield p.map {
+      case (id, name) =>
+        Products.Product(id, name, articles.getOrElse(id, List.empty))
+    }
+
+  private def selectByIdQuery(id: Long): doobie.ConnectionIO[Option[Products.Product]] =
+    for {
+      a <- sql"""
+           SELECT article_id, amount_of, in_stock 
+           FROM products_articles 
+           INNER JOIN articles ON articles.id = products_articles.article_id
+           WHERE product_id = $id
+           """
         .query[Products.Article]
         .to[List]
-      p <- sql"""
-            SELECT
-              id,
-              name
-            FROM products
-            WHERE id = $id
-            """
+      p <- sql"SELECT id, name FROM products WHERE id = $id"
         .query[(Long, String)]
         .map {
           case (id, name) =>
@@ -78,7 +100,6 @@ object ProductsService {
         }
         .option
     } yield p
-  }
 
   private def updateQuery(product: Products.Product): doobie.ConnectionIO[Int] =
     for {

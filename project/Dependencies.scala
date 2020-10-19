@@ -25,7 +25,7 @@ object Dependencies {
     "io.circe"              %% "circe-core"             % version.circe,
     "io.circe"              %% "circe-generic"          % version.circe,
     "io.circe"              %% "circe-parser"           % version.circe,
-    "io.circe"              %% "circe-literal"          % version.circe % AllTests,
+    "io.circe"              %% "circe-literal"          % version.circe,
     "io.chrisdavenport"     %% "log4cats-core"          % version.log4cats,
     "io.chrisdavenport"     %% "log4cats-slf4j"         % version.log4cats,
     "io.chrisdavenport"     %% "log4cats-testing"       % version.log4cats % AllTests,

@@ -6,7 +6,8 @@ CREATE TABLE products (
 CREATE TABLE articles (
     id       BIGINT SERIAL NOT NULL PRIMARY KEY,
     name     VARCHAR(255) NOT NULL,
-    in_stock INT NOT NULL DEFAULT 0
+    in_stock INT NOT NULL DEFAULT 0,
+    CHECK in_stock >= 0
 );
 
 CREATE TABLE products_articles (
