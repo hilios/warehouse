@@ -5,30 +5,30 @@ import cats.effect.IO
 import cats.implicits._
 import com.ingka.warehouse.api.domain.{Envelope, Products}
 import io.circe._
-import io.circe.generic.semiauto._
 import org.http4s._
 import org.http4s.headers.Location
 
 case class ProductsRoutes(products: Products[IO]) extends Routes {
 
   // JSON encoder/decoders
-  implicit def envelopeEncoder[A: Encoder]: Encoder[Envelope[A]] = deriveEncoder[Envelope[A]]
+  implicit lazy val envelopeEncoder: Encoder[Envelope[Products.Product]] =
+    Encoder.forProduct1("products")(_.results)
 
-  implicit val articleEncoder: Encoder[Products.Article] =
+  implicit lazy val articleEncoder: Encoder[Products.Article] =
     Encoder.forProduct3("art_id", "amount_of", "in_stock") { a =>
       (a.id, a.amountOf, a.inStock)
     }
 
-  implicit val productEncoder: Encoder[Products.Product] =
+  implicit lazy val productEncoder: Encoder[Products.Product] =
     Encoder.forProduct4("id", "name", "is_available", "contain_articles") { p =>
       (p.id, p.name, p.isAvailable, p.articles)
     }
 
-  implicit val articleDecoder: Decoder[Products.Article] =
+  implicit lazy val articleDecoder: Decoder[Products.Article] =
     Decoder.forProduct2("art_id", "amount_of") { (id: Long, amountOf: Int) =>
       Products.Article(id, amountOf, inStock = 0)
     }
-  implicit val productDecoder: Decoder[Products.Product] =
+  implicit lazy val productDecoder: Decoder[Products.Product] =
     Decoder.forProduct2("name", "contain_articles") { (name: String, articles: List[Products.Article]) =>
       Products.Product(id = -1, name = name, articles = articles)
     }

@@ -41,7 +41,7 @@ class ProductsRoutesSpec extends UnitSpec {
       body shouldBe
         json"""
           {
-            "results": [
+            "products": [
               {
                 "id": 1,
                 "name": "BESTÅ",
