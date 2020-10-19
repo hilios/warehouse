@@ -46,6 +46,7 @@ class ProductsRoutesSpec extends UnitSpec {
                 "id": 1,
                 "name": "BESTÅ",
                 "is_available" : true,
+                "in_stock": 25,
                 "contain_articles": [
                   {
                     "art_id": 1,
@@ -75,6 +76,7 @@ class ProductsRoutesSpec extends UnitSpec {
             "id" : 1,
             "name" : "BESTÅ",
             "is_available" : true,
+            "in_stock": 25,
             "contain_articles" : [
               {
                 "art_id" : 1,

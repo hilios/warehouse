@@ -20,8 +20,8 @@ case class ProductsRoutes(products: Products[IO]) extends Routes {
     }
 
   implicit lazy val productEncoder: Encoder[Products.Product] =
-    Encoder.forProduct4("id", "name", "is_available", "contain_articles") { p =>
-      (p.id, p.name, p.isAvailable, p.articles)
+    Encoder.forProduct5("id", "name", "is_available", "in_stock", "contain_articles") { p =>
+      (p.id, p.name, p.isAvailable, p.inStock, p.articles)
     }
 
   implicit lazy val articleDecoder: Decoder[Products.Article] =

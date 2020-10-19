@@ -18,6 +18,10 @@ object Products {
       case (bool, a) =>
         bool && a.isAvailable
     }
+
+    val inStock: Int =
+      if (articles.isEmpty) 0
+      else articles.map(a => if (a.amountOf > 0) Math.floorDiv(a.inStock, a.amountOf) else 0).min
   }
   final case class Article(id: Long, amountOf: Int, inStock: Int) {
     val isAvailable: Boolean = amountOf <= inStock
