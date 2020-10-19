@@ -9,6 +9,8 @@ lazy val warehouse = (project in file("."))
   .aggregate(api, cli)
 
 lazy val api = (project in file("api"))
+  .configs(IntegrationTest)
+  .settings(Defaults.itSettings)
   .settings(
     name := "warehouse-api",
     libraryDependencies ++= Dependencies.api
@@ -28,4 +30,3 @@ lazy val commonSettings = Seq(
   parallelExecution in Test            := false,
   parallelExecution in IntegrationTest := false
 )
-

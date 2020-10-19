@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+
+    <logger name="org.http4s.blaze.channel" level="ERROR" />
+
+    <root level="${LOGLEVEL_ROOT:-INFO}">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{ISO8601} %-5level [%logger{0}] - %msg%n</pattern>
+            </encoder>
+        </appender>
+    </root>
+</configuration>
