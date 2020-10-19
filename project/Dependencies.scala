@@ -1,7 +1,6 @@
 import sbt._
 
 object Dependencies {
-  lazy val AllTests = s"$Test,$IntegrationTest"
 
   lazy val version = new {
     val catsCore   = "2.2.0"
@@ -28,12 +27,12 @@ object Dependencies {
     "io.circe"              %% "circe-literal"          % version.circe,
     "io.chrisdavenport"     %% "log4cats-core"          % version.log4cats,
     "io.chrisdavenport"     %% "log4cats-slf4j"         % version.log4cats,
-    "io.chrisdavenport"     %% "log4cats-testing"       % version.log4cats % AllTests,
-    "org.scalatest"         %% "scalatest"              % version.scalaTest % AllTests,
-    "org.scalamock"         %% "scalamock"              % version.scalaMock % AllTests
+    "io.chrisdavenport"     %% "log4cats-testing"       % version.log4cats % Test,
+    "org.scalatest"         %% "scalatest"              % version.scalaTest % Test,
+    "org.scalamock"         %% "scalamock"              % version.scalaMock % Test
   )
 
-  lazy val api = common ++ Seq(
+  lazy val libraries = common ++ Seq(
     "org.http4s"     %% "http4s-blaze-server" % version.http4s,
     "org.http4s"     %% "http4s-circe"        % version.http4s,
     "org.http4s"     %% "http4s-dsl"          % version.http4s,
@@ -42,9 +41,5 @@ object Dependencies {
     "org.tpolecat"   %% "doobie-hikari"       % version.doobie,
     "org.flywaydb"   % "flyway-core"          % version.flyway,
     "ch.qos.logback" % "logback-classic"      % version.logback
-  )
-
-  lazy val cli = common ++ Seq(
-    "org.http4s" %% "http4s-blaze-client" % version.http4s
   )
 }
